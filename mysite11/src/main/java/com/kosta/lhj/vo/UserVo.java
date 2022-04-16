@@ -1,0 +1,63 @@
+package com.kosta.lhj.vo;
+
+public class UserVo {
+	
+	private int no;
+	private String name;
+	private String email;
+	private String password;
+	private String gender;
+	public int getNo() {
+		return no;
+	}
+	public String getName() {
+		return name;
+	}
+	public String getEmail() {
+		return email;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public String getGender() {
+		return gender;
+	}
+	public void setNo(int no) {
+		this.no = no;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	public void setGender(String gender) {
+		this.gender = gender;
+	}
+	public UserVo(int no, String name, String email, String password, String gender) {
+		super();
+		this.no = no;
+		this.name = name;
+		this.email = email;
+		this.password = password;
+		this.gender = gender;
+	}
+	
+	public UserVo(String name, String email, String password, String gender) {
+		super();
+		this.name = name;
+		this.email = email;
+		this.password = password;
+		this.gender = gender;
+	}
+	
+	public UserVo() {
+		super();
+	}
+	
+	
+	
+}
