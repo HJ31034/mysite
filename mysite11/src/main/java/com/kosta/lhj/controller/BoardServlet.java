@@ -14,9 +14,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
+ 
+import org.apache.tomcat.util.http.fileupload.FileItem;
+import org.apache.tomcat.util.http.fileupload.RequestContext;
+import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
+import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
+
 import com.kosta.lhj.dao.BoardDaoImpl;
 import com.kosta.lhj.util.WebUtil;
 import com.kosta.lhj.vo.BoardVo;
@@ -26,7 +29,7 @@ import com.kosta.lhj.vo.UserVo;
 public class BoardServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
-	/*
+	static /*
 	 * public enum EPath { MIDDLEPATH(
 	 * "C:\\Users\\illus\\eclipse-workspace\\mysite\\src\\main\\webapp\\WEB-INF\\views\\images"
 	 * ), THUMBPATH("123");
@@ -36,7 +39,7 @@ public class BoardServlet extends HttpServlet {
 	 * private EPath(String value){ this.value = value; } public String getValue() {
 	 * return value; } }
 	 */
-
+	String realPath = null;
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		request.setCharacterEncoding("UTF-8");
@@ -50,16 +53,41 @@ public class BoardServlet extends HttpServlet {
 			// 리스트 가져오기
 			BoardDaoImpl dao = new BoardDaoImpl();
 
+			int pageSize=10; //블럭당 페이지수
+			String pageNum = request.getParameter("pageNum"); 			
 			String keyword = request.getParameter("kwd");
 			String startDate = request.getParameter("startDate");
 			String endDate = request.getParameter("endDate");
-
+	 
 			if (keyword == null) { // 검색호출 전
-				List<BoardVo> list = dao.getList();
-				System.out.println("keywordkeywordkeyword: " + keyword);
-				System.out.println("list: " + list.size());
+				System.out.println("actionName = list_keyword: " + keyword);
+				//게시판 LIST 목록 출력
+				 
+				 
+				 
+			    //페이징
+				if(pageNum == null) {
+					pageNum = "1";
+				}
+				int currentPage = Integer.parseInt(pageNum); // 현재 페이지 번호
+				int startRow = (currentPage-1) * pageSize + 1; // 현재 페이지의 결과 첫 행의 행번호
+				System.out.println("currentPage: "+ currentPage);
+				System.out.println("startRow: " +startRow);
+				List<BoardVo> list = dao.getList(startRow,pageSize);
 				request.setAttribute("list", list);
-
+				 
+				  
+			    int totalCount = list.size();
+				 
+				System.out.println("list: " + list.size());
+				request.setAttribute("totalCount", totalCount);
+				
+				 
+				
+				
+				
+				 
+				System.out.println("pageNum: " +  pageNum);
 			} else { // 검색!!
 				System.out.println("keywordkeywordkeyword: " + keyword);
 				System.out.println("startDatestartDatestartDate: " + startDate);
@@ -145,7 +173,7 @@ public class BoardServlet extends HttpServlet {
 			String fileName = request.getParameter("fileName");
 
 			// String realPath2 = request.getSession().getServletContext().getRealPath("/");
-			String realPath = request.getSession().getServletContext().getRealPath("WEB-INF\\views\\images\\");
+			 realPath = request.getSession().getServletContext().getRealPath("WEB-INF\\views\\images\\");
 
 			File downfile = new File(realPath + "\\" + fileName);
 			System.out.println("동적PATH: " + realPath + "\\" + fileName);
@@ -200,7 +228,9 @@ public class BoardServlet extends HttpServlet {
 	}
 
 	private static final String CHARSET = "utf-8";
-	private static final String ATTACHES_DIR = "C:\\Users\\illus\\eclipse-workspace\\mysite\\src\\main\\webapp\\WEB-INF\\views\\images";
+	
+	//private static final String ATTACHES_DIR = "C:\\Users\\illus\\eclipse-workspace\\mysite\\src\\main\\webapp\\WEB-INF\\views\\images";
+	private static final String ATTACHES_DIR = realPath;
 	private static final int LIMIT_SIZE_BYTES = 1024 * 1024;
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -234,7 +264,7 @@ public class BoardServlet extends HttpServlet {
 		String newFileName = null;
 
 		try {
-			List<FileItem> items = fileUpload.parseRequest(request);
+			List<FileItem> items = fileUpload.parseRequest((RequestContext) request);
 			for (FileItem item : items) {
 				if (item.isFormField()) {
 					System.out.printf("aa파라미터 명=" + item.getFieldName() + " , value=" + item.getString(CHARSET));

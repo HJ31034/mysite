@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.fileupload.MultipartStream;
+ 
 
 import com.kosta.lhj.vo.BoardVo;
 
@@ -25,23 +25,45 @@ public class BoardDaoImpl implements BoardDao {
 		return conn;
 	}
 
-	public List<BoardVo> getList() {
+	public List<BoardVo> getList(int startRow, int pageSize) {
 
 		// 0. import java.sql.*;
 		Connection conn = null;
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		List<BoardVo> list = new ArrayList<BoardVo>();
-System.out.println("getList 전체게시글보기");
+		System.out.println("getList 전체게시글보기");
+	//	System.out.println("start: " + startRow + " end: " + pageSize);
+		
+		
 		try {
 			conn = getConnection();
 
 			// 3. SQL문 준비 / 바인딩 / 실행
-			String query = "select b.no, b.title, b.hit, to_char(b.reg_date, 'yy-mm-dd') rd, b.user_no, u.name "
-					+ " from board b, users u " + " where b.user_no = u.no " + " order by no desc";
+			/*
+			 * String query =
+			 * "select b.no, b.title, b.hit, to_char(b.reg_date, 'yy-mm-dd') rd, b.user_no, u.name "
+			 * + " from board b, users u " + " where b.user_no = u.no " +
+			 * " order by no desc";
+			 */
+			
+			
+			  String query = " select no,title,hit,reg_date rd,user_no,name from(\r\n"
+			  		+ "   select rownum as rn, b.no,b.title,b.hit,b.reg_date,b.user_no,u.name\r\n"
+			  		+ "   from board b\r\n"
+			  		+ "   JOIN users u\r\n"
+			  		+ "   on b.user_no=u.no  order by no desc)\r\n"
+			  		+ "   where rn between ? and ?";
+			 
 
 			pstmt = conn.prepareStatement(query);
-
+			
+			
+			pstmt.setInt(1, startRow);
+			pstmt.setInt(2, pageSize);
+			 
+		        
+		        
 			rs = pstmt.executeQuery();
 			// 4.결과처리
 			while (rs.next()) {
@@ -76,8 +98,51 @@ System.out.println("getList 전체게시글보기");
 		return list;
 
 	}
+	
+	 
+	 
+	public int getTotalCount() { 
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		String sql = null;
+		int totalCount = 0;
+		
+		try {
+			conn = getConnection();
+			sql = "select count(no) cnt from board;";
+			pstmt = conn.prepareStatement(sql);
+			 
+			 
+		rs=	pstmt.executeQuery();
+			
+			if (rs.next()) {
+				totalCount = rs.getInt("cnt");
+			}
 
-	public BoardVo getBoard(int no) {
+			 
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (pstmt != null) {
+					pstmt.close();
+				}
+				if (conn != null) {
+					conn.close();
+				}
+			} catch (SQLException e) {
+				System.out.println("error:" + e);
+			}
+
+		}
+		System.out.println("totalCounttotalCounttotalCounttotalCounttotalCounttotalCounttotalCount: "+totalCount);
+		return totalCount;
+	}
+	
+
+
+	public BoardVo getBoard(int no) {//read.jsp 게시물info
 
 		// 0. import java.sql.*;
 		Connection conn = null;
@@ -95,7 +160,7 @@ System.out.println("getList 전체게시글보기");
 					+ " from board b, users u " 
 					+ " where b.user_no = u.no "
 					+ " and b.no = ?";
-
+	 
 			pstmt = conn.prepareStatement(query);
 			pstmt.setInt(1, no);
 
